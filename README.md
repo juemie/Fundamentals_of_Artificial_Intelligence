@@ -16,7 +16,7 @@
 
 搞政治而不讲原则。
 
--圣雄甘地
+——圣雄·甘地
 
 
 
@@ -26,11 +26,15 @@
 
 2.应用：输入鸢尾花的花瓣长度和宽度，得到分类器的预测结果。
 
-1.1感知器
+1.1感知器实现
+
+这里既可以手工搭建简单的神经也可以利用深度学习等框架进行搭建
+
+
 
 1.2.SVM(支持向量机实现)
 
-[SVM.ipynb](实验2-3\SVM.ipynb) 
+[SVM.ipynb](https://github.com/juemie/Fundamentals_of_Artificial_Intelligence/blob/master/%E5%AE%9E%E9%AA%8C2-3/SVM.ipynb) 
 
 
 

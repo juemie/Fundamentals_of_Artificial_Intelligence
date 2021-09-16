@@ -1,3 +1,4 @@
+import tensorflow as tf
 import collections
 import random
 import re
@@ -117,3 +118,70 @@ skip_window = 2
 num_skips = 64
 valid_window = 100
 learning_rate = 0.01
+# 校验集
+valid_word = ['令狐冲', '左冷禅', '林平之', '岳不群', '姚根仙']
+valid_example = [dictionary[i] for li in valid_word]
+# 定义ship-gram 网络结构
+data_index = 0
+
+
+# 为ship-gram 模型生成训练批次
+def next_batch(batch_size, num_ship, skip_window):
+    global data_index
+    assert batch_size % num_ship == 0
+    assert num_ship <= 2 * skip_window
+    batch = np.ndarray(shape=(batch_size), dtype=np.int32)
+    labels = np.ndarray(shape=(batch_size, 1), dtype=np.int32)
+    # 得到窗口长度(当前单词左面和右面 + 当前单词)
+    span = 2 * skip_window + 1
+    buffer = collections.deque(maxlen=span)
+    if data_index + span > len(data):
+        data_index = 0
+    buffer.append(data[data_index:data_index + span])
+    data_index += span
+    for i in range(batch_size // num_skips):
+        context_words = [w for w in range(span) if w != skip_window]
+        words_to_use = random.sample(context_words, num_skips)
+        for j, context_word in enumerate(words_to_use):
+            batch[i * num_skips + j] = buffer[skip_window]
+            labels[i * num_skips + j, 0] = buffer[context_word]
+        if data_index == len(data):
+            buffer.extend(data[0:span])
+            data_index = span
+        else:
+            buffer.append(data[data_index])
+            data_index += 1
+    # 回溯一点，以避免在批处理结束时跳过单词
+    data_index = (data_index + len(data) - span) % len(data)
+    return batch, labels
+
+
+# 确保在cpu上分配一下操作和变量
+# 某些操作在GPU上不兼容
+with tf.device('/cpu:0'):
+    # 创建嵌入变量（每一行代表一个词嵌入向量）embedding vector)
+    embedding = tf.Variable(tf.random.normal([vocabulary_size, embedding_size]))
+    # 构造NCE损失的变量
+    nce_weights = tf.Variable(tf.random.normal([vocabulary_size, embedding_size]))
+    nce_biases = tf.Variable(tf.Variable(tf.zeros([vocabulary_size])))
+
+
+def get_embedding(x):
+    with tf.device('/cpu:0'):
+        # 对于x中的每一个样本查找对应的嵌入向量
+        x_embed = tf.nm.embedding_lookup(embedding, x)
+        return x_embed
+
+def nce_loss(x_embed, y):
+    with tf.device('/cpu:0'):
+        # 计算批处理中平均NCE损失
+        y = tf.cast(y, tf.int64)
+        loss = tf.reduce_mean(
+            tf.nn.nce_loss(weight=nce_weights,
+                           biases=nce_biases,
+                           labels=y,
+                           inputs=x_embed,
+                           num_sampled=num_sample,
+                           num_classes=vocabulary_size)
+        )
+

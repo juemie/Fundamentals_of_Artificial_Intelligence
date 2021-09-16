@@ -36,13 +36,13 @@ with open("data/The_Smiling_Proud_Wanderer.txt", "r", encoding="utf-8") as f_rea
         line = "".join(jieba.cut(line))
         seg_list = pattern.findall(line)
         # 去掉停用词的列表
-        world_list = []
+        word_list = []
         for word in seg_list:
-            if word not in world_list:
-                world_list.append(word)
-        if len(world_list) > 0:
-            raw_word_list.extend(world_list)
-            line = "".join(world_list)
+            if word not in word_list:
+                word_list.append(word)
+        if len(word_list) > 0:
+            raw_word_list.extend(word_list)
+            line = "".join(word_list)
             # line = "".join(seg_list)
             f_write.write(line + "\n")
             f_write.flush()
@@ -76,8 +76,8 @@ count[0][1] = unk_count
 # 根据编码找到对应的词
 reverse_dictionary = dict(zip(dictionary.values(), dictionary.keys()))
 del words
-print(reverse_dictionary[1000])
-print(data[:200])
+print(reverse_dictionary[0])
+print(data[:0])
 
 data_index = 0
 """

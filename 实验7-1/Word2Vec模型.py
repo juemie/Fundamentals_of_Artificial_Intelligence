@@ -50,14 +50,15 @@ f_write.close()
 print(raw_word_list)
 print(len(raw_word_list))
 print(set(raw_word_list))
-# 4分词定义Word2Vec
+
+# 4。分词定义Word2Vec
 # 文本编码通过汉字找到对应的编码，再通过编码找到对应的汉字
 vocabulary_size = len(set(raw_word_list))
 words = raw_word_list
 # count存放每个词在文本出现的次数
 count = [['UNK', '-1']]
 count.extend(collections.Counter(words).most_common(vocabulary_size - 1))
-print("count", len(count))
+# print("count", len(count))
 dictionary = dict()
 
 # 词的整形编码
@@ -76,8 +77,8 @@ count[0][1] = unk_count
 # 根据编码找到对应的词
 reverse_dictionary = dict(zip(dictionary.values(), dictionary.keys()))
 del words
-print(reverse_dictionary[0])
-print(data[:0])
+# print(reverse_dictionary[0])
+# print(data[:0])
 
 data_index = 0
 """

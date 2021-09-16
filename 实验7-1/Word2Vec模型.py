@@ -21,7 +21,7 @@ stop_worlds = set(stop_worlds)
 print(len(stop_worlds))
 
 raw_word_list = []  # 分完词储存列表
-rules = u"(\u4300-\u9fa5)"
+rules = u"([\u4e00-\u9fa5]+)"
 pattern = re.compile(rules)
 f_write = open("../data/Seg_The_Smiling_Proud_Wanderer.txt", "w", encoding="utf-8")
 # 读取数据集
@@ -33,7 +33,7 @@ with open("data/The_Smiling_Proud_Wanderer.txt", "r", encoding="utf-8") as f_rea
         if line == '' or line is None:
             continue
         # jieba分词处理
-        line = "".join(jieba.cut(line))
+        line = " ".join(jieba.cut(line))
         seg_list = pattern.findall(line)
         # 去掉停用词的列表
         word_list = []
@@ -51,7 +51,7 @@ print(raw_word_list)
 print(len(raw_word_list))
 print(set(raw_word_list))
 
-# 4。分词定义Word2Vec
+# 4.分词定义Word2Vec
 # 文本编码通过汉字找到对应的编码，再通过编码找到对应的汉字
 vocabulary_size = len(set(raw_word_list))
 words = raw_word_list
@@ -87,10 +87,11 @@ data_index = 0
 
 
 def generate_batch(batch_size, num_ships, skip_window):
-    global data_index
+    global data_index # 声明全局变量
     batch = np.ndarray(shape=batch_size, dtype=np.int32)
     labels = np.ndarray(shape=(batch_size, 1), dtype=np.int32)
     span = 2 * skip_window + 1
+
     # 对某个单词创建相关样本时使用到的单词数量
     buffer = collections.deque(maxlen=span)
     for _ in range(span):
@@ -111,8 +112,8 @@ def generate_batch(batch_size, num_ships, skip_window):
 
 
 batch, labels = generate_batch(batch_size=128, num_ships=4, skip_window=2)
-for i in range(10):
-    print(batch[i], reverse_dictionary[batch[i]], '-->', labels[i, 0], reverse_dictionary[labels[i, 0]])
+# for i in range(10):
+#     print(batch[i], reverse_dictionary[batch[i]], '-->', labels[i, 0], reverse_dictionary[labels[i, 0]])
 
 # skip-gram model
 batch_size = 128  # batch_size为batch大小
@@ -122,8 +123,8 @@ num_skips = 64
 valid_window = 100
 learning_rate = 0.01
 # 校验集
-valid_word = ['令狐冲', '左冷禅', '林平之', '岳不群', '姚根仙']
-valid_example = [dictionary[i] for li in valid_word]
+valid_word = ['欧若拉', '黑星', '海拉']
+valid_example = [dictionary[li] for li in valid_word]
 # 定义ship-gram 网络结构
 data_index = 0
 
@@ -204,7 +205,6 @@ def evaluate(x_embed):
 
 # 定义优化器
 optimizer = tf.optimizers.SGD(learning_rate)
-
 
 # 优化过程
 def run_optimization(x, y):

@@ -6,8 +6,9 @@ import jieba
 import numpy as np
 import tensorflow as tf
 
+# 读取停用词
 stop_worlds = []
-with open("..data/stop_words.txt", 'r', encoding='utf-8') as f_stop_words:
+with open("../data/stop_words.txt", 'r', encoding='utf-8') as f_stop_words:
     for line in f_stop_words:
         # 去掉停用词的中的回车，换行符，空格
         line = line.replace('\r', '').replace('\n', '').strip()
@@ -24,7 +25,7 @@ rules = u"(\u4300-\u9fa5)"
 pattern = re.compile(rules)
 f_write = open("..data/Seg_The_Smiling_Proud_Wanderer.txt", "w", encoding="utf-8")
 # 读取数据集
-with open("data/The_Smiling_Proud_Wanderer.txt", "r", encoding="utf-8") as f_reader:
+with open("..data/The_Smiling_Proud_Wanderer.txt", "r", encoding="utf-8") as f_reader:
     lines = f_reader.readlines()
     for line in lines:
         # 去掉文本中的回车，换行符，空格
@@ -232,3 +233,16 @@ for step in range(num_steps):
             loss = nce_loss(get_embedding(batch_inputs), batch_labels)
             print('step:%i, loss:%f' % (step, loss))
             print("平均损失在", num_steps, "中为:", avg_loss)
+
+    # 计算验证集合的相似度
+    if step % 10000 == 0:
+        sim = evaluate(get_embedding(x_test).numpy())
+        for i in range(len(valid_word)):
+            val_word = reverse_dictionary[valid_example[i]]
+            top_k = 10
+            nearest = (-sim[i,:]).argsort()[1:top_k+1]
+            sim_str = "与" + valid_word + "最近的前10词是"
+            for k in range(top_k):
+                close_word = reverse_dictionary[nearest[k]]
+                sim_str = "%s %s" % (sim_str, close_word)
+            print(sim_str)

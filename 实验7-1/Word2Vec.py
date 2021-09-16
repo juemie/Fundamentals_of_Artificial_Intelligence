@@ -1,10 +1,10 @@
-import tensorflow as tf
 import collections
 import random
 import re
 
 import jieba
 import numpy as np
+import tensorflow as tf
 
 stop_worlds = []
 with open("..data/stop_words.txt", 'r', encoding='utf-8') as f_stop_words:
@@ -172,6 +172,7 @@ def get_embedding(x):
         x_embed = tf.nm.embedding_lookup(embedding, x)
         return x_embed
 
+
 def nce_loss(x_embed, y):
     with tf.device('/cpu:0'):
         # 计算批处理中平均NCE损失
@@ -184,4 +185,50 @@ def nce_loss(x_embed, y):
                            num_sampled=num_sample,
                            num_classes=vocabulary_size)
         )
+    return loss
 
+
+# 评估
+def evaluate(x_embed):
+    with tf.device('/cpu:0'):
+        # 计算输入数据嵌入与每个嵌入向量之间的余弦相似度
+        x_embed = tf.cast(x_embed, tf.float32)
+        x_embed_norm = x_embed / tf.sqrt(tf.reduce_sum(tf.square(x_embed)))
+        embedding_norm = embedding / tf.sqrt(tf.reduce_sum(tf.square(embedding), 1, keepdims=True), tf.float32)
+        cosine_sim_op = tf.matmul(x_embed_norm, embedding_norm, transpose_b=True)
+        return cosine_sim_op
+
+
+# 定义优化器
+optimizer = tf.optimizers.SGD(learning_rate)
+
+
+# 优化过程
+def run_optimization(x, y):
+    with tf.device('/cpu:0'):
+        # 将计算封装在GradientTape中以实现自动微分
+        with tf.GradientTape() as g:
+            emb = get_embedding(x)
+            loss = nce_loss(emb, y)
+        # 计算梯度
+        gradients = g.gradient(loss, [embedding, nce_weights, nce_biases])
+    # 安gradientsg更新W和b
+    optimizer.apply_gradients(zip(gradients, [embedding, nce_weights, nce_biases]))
+
+
+# 用于测试的单词
+x_test = np.array(valid_example)
+num_steps = 200000
+avg_loss = 0
+for step in range(num_steps):
+    batch_inputs, batch_labels = generate_batch(batch_size, num_skips, skip_window)
+    run_optimization(batch_inputs, batch_labels)
+    loss = nce_loss(get_embedding(batch_inputs), batch_labels)
+    avg_loss = avg_loss + loss
+
+    if stop % 5000 == 0:
+        if step > 0:
+            avg_loss = avg_loss / 5000
+            loss = nce_loss(get_embedding(batch_inputs), batch_labels)
+            print('step:%i, loss:%f' % (step, loss))
+            print("平均损失在", num_steps, "中为:", avg_loss)

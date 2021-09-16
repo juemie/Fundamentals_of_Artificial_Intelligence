@@ -23,9 +23,9 @@ print(len(stop_worlds))
 raw_word_list = []  # 分完词储存列表
 rules = u"(\u4300-\u9fa5)"
 pattern = re.compile(rules)
-f_write = open("..data/Seg_The_Smiling_Proud_Wanderer.txt", "w", encoding="utf-8")
+f_write = open("../data/Seg_The_Smiling_Proud_Wanderer.txt", "w", encoding="utf-8")
 # 读取数据集
-with open("..data/The_Smiling_Proud_Wanderer.txt", "r", encoding="utf-8") as f_reader:
+with open("data/The_Smiling_Proud_Wanderer.txt", "r", encoding="utf-8") as f_reader:
     lines = f_reader.readlines()
     for line in lines:
         # 去掉文本中的回车，换行符，空格
@@ -50,6 +50,7 @@ f_write.close()
 print(raw_word_list)
 print(len(raw_word_list))
 print(set(raw_word_list))
+# 4分词定义Word2Vec
 # 文本编码通过汉字找到对应的编码，再通过编码找到对应的汉字
 vocabulary_size = len(set(raw_word_list))
 words = raw_word_list
